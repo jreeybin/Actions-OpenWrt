@@ -37,6 +37,7 @@ jobs:
       uses: actions/checkout@main
 
     - name: Initialization environment
+     id: init
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
