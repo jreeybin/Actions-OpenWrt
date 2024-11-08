@@ -97,6 +97,7 @@ jobs:
       id: package
       run: |
         cd openwrt
+        git checkout 91bfc0ea152ce7b102a0b79d35a7c92843874ebf085c99d2ba8b4d85e62b1a7c
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
