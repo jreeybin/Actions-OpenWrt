@@ -78,8 +78,7 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-    - name: 内核版本
-      run: cd openwrt && git checkout 91bfc0ea152ce7b102a0b79d35a7c92843874ebf085c99d2ba8b4d85e62b1a7c
+        
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
