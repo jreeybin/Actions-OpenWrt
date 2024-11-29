@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  REPO_URL: https://github.com/jreeybin/lede
+  REPO_URL: https://github.com/jreeybin/immortalwrt
   REPO_BRANCH: v23.05.4
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
