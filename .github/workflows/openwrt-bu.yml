@@ -38,8 +38,15 @@ jobs:
 
     - name: 创建模拟物理磁盘
       run: |
+        # 限制磁盘大小为最大 2 GiB
+        max_size=2
         mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
         root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+
+        # 确保分区大小不会超过 2 GiB
+        mnt_size=$((${mnt_size}>${max_size} ? ${max_size} : ${mnt_size}))
+        root_size=$((${root_size}>${max_size} ? ${max_size} : ${root_size}))
+
         sudo truncate -s "${mnt_size}"G /mnt/mnt.img
         sudo truncate -s "${root_size}"G /root.img
         sudo losetup /dev/loop6 /mnt/mnt.img
@@ -155,5 +162,3 @@ jobs:
       with:
         retain_days: 0
         keep_minimum_runs: 2
-
-
