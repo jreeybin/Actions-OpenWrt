@@ -106,10 +106,14 @@ jobs:
       id: clean
       if: ${{ steps.compile.outputs.status }} == 'success' && !cancelled()
       run: |
-        # 清理服务器空间
         cd openwrt/
         [[ -d "output" ]] || mkdir output
-        cp -f bin/targets/*/*/*rootfs.tar.gz output/
+        # 检查并复制文件
+        if ls bin/targets/*/*/*rootfs.tar.gz 1>/dev/null 2>&1; then
+            cp -f bin/targets/*/*/*rootfs.tar.gz output/
+        else
+            echo "Warning: No rootfs.tar.gz file found in bin/targets/"
+        fi
         cp -f .config output/config
         rm -rf $(ls . | grep -v "^output$" | xargs) 2>/dev/null
 
