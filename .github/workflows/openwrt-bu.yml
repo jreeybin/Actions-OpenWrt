@@ -156,8 +156,8 @@ jobs:
         retain_days: 0
         keep_minimum_runs: 2
 
-    - name: 删除旧版本
-      uses: dev-drprasad/delete-older-releases@v2
+     - name: 删除旧版本
+      uses: dev-drprasad/delete-older-releases@main  # Try using `main` or another available version
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 3
