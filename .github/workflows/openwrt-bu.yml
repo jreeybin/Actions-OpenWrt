@@ -155,8 +155,8 @@ jobs:
       with:
         retain_days: 0
         keep_minimum_runs: 2
-
-     - name: 删除旧版本
+    
+    - name: 删除旧版本
       uses: dev-drprasad/delete-older-releases@main  # Try using `main` or another available version
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
@@ -164,3 +164,5 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
