@@ -19,10 +19,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
     steps:
     - name: 查看
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 初始化环境
       env:
