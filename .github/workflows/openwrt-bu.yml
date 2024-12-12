@@ -1,4 +1,4 @@
-name: OpenWrt 编译器
+name: OpenWrt 1
 
 on:
   repository_dispatch:
