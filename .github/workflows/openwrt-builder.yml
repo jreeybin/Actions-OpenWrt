@@ -1,4 +1,4 @@
-name: OpenWrt 编译器
+name: OpenWrt E20C
 
 on:
   repository_dispatch:
