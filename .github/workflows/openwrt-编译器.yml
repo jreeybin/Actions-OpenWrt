@@ -27,7 +27,7 @@ jobs:
     - name: 增加磁盘空间
       run: |
         sudo mkdir -p /mnt/extra_space
-        sudo mount -t tmpfs -o size=15G tmpfs /mnt/extra_space
+        sudo mount -t tmpfs -o size=30G tmpfs /mnt/extra_space
         sudo ln -s /mnt/extra_space /workdir
 
     - name: 初始化环境
