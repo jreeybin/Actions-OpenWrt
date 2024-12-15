@@ -1,4 +1,4 @@
-name: OpenWrt 编译器
+name: OpenWrt 修改
 
 on:
   repository_dispatch:
@@ -22,13 +22,7 @@ jobs:
 
     steps:
     - name: 查看
-      uses: actions/checkout@v3
-
-    - name: 增加磁盘空间
-      run: |
-        sudo mkdir -p /mnt/extra_space
-        sudo mount -t tmpfs -o size=30G tmpfs /mnt/extra_space
-        sudo ln -s /mnt/extra_space /workdir
+      uses: actions/checkout@main
 
     - name: 初始化环境
       env:
@@ -42,12 +36,30 @@ jobs:
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
 
+    - name: 创建模拟物理磁盘
+      run: |
+        mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+        root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+        sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+        sudo truncate -s "${root_size}"G /root.img
+        sudo losetup /dev/loop6 /mnt/mnt.img
+        sudo losetup /dev/loop7 /root.img
+        sudo pvcreate /dev/loop6
+        sudo pvcreate /dev/loop7
+        sudo vgcreate github /dev/loop6 /dev/loop7
+        sudo lvcreate -n runner -l 100%FREE github
+        sudo mkfs.xfs /dev/github/runner
+        sudo mkdir -p /builder
+        sudo mount /dev/github/runner /builder
+        sudo chown -R runner.runner /builder
+        df -Th
+
     - name: 克隆源代码
-      working-directory: /workdir
+      working-directory: /builder
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        ln -sf /builder/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: 加载自定义订阅源
       run: |
@@ -90,20 +102,12 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    - name: 清理临时文件
-      if: (!cancelled())
-      run: |
-        sudo rm -rf /workdir/openwrt/build_dir
-        sudo rm -rf /workdir/openwrt/staging_dir
-        sudo rm -rf /workdir/openwrt/tmp
-        sudo rm -rf /workdir/openwrt/dl
-
     - name: 检查空间使用情况
       if: (!cancelled())
       run: df -hT
 
     - name: 上传 bin 目录
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -119,7 +123,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件目录
-      uses: actions/upload-artifact@v3
+      uses: softprops/action-gh-release@v1
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -131,6 +135,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
+        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "\ud83d\udd17 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到发布页
@@ -144,13 +149,13 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
 
     - name: 删除工作流程运行
-      uses: Mattraks/delete-workflow-runs@v1
+      uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 0
         keep_minimum_runs: 2
 
-    - name: 删除旧版本发布
-      uses: dev-drprasad/delete-older-releases@v0.2.0
+    - name: 删除旧版本
+      uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 3
