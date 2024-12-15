@@ -122,29 +122,27 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: 上传固件目录
-      uses: softprops/action-gh-release@v1
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
-
-    - name: 生成发布 tag
-      id: tag
+    - name: 生成并推送标签
+      id: create_tag
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "\ud83d\udd17 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        tag_name=$(date +"%Y.%m.%d-%H%M")
+        echo "release_tag=$tag_name" >> $GITHUB_ENV
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git tag $tag_name
+        git push origin $tag_name
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到发布页
       uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      if: steps.create_tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
+        tag_name: ${{ env.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
