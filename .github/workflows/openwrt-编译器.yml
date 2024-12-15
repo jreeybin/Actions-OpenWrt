@@ -113,7 +113,7 @@ jobs:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
 
-    - name: 整理文件
+        - name: 整理文件
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
@@ -136,6 +136,17 @@ jobs:
         git push origin $tag_name
         echo "status=success" >> $GITHUB_OUTPUT
 
+    - name: 生成发布说明文件
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "OpenWrt 固件编译完成。" > release.txt
+        echo "" >> release.txt
+        echo "编译时间: $(date +"%Y-%m-%d %H:%M:%S")" >> release.txt
+        echo "" >> release.txt
+        echo "包含的固件文件:" >> release.txt
+        ls -lh ${{ env.FIRMWARE }} >> release.txt
+        cat release.txt
+
     - name: 上传固件到发布页
       uses: softprops/action-gh-release@v1
       if: steps.create_tag.outputs.status == 'success' && !cancelled()
@@ -145,6 +156,7 @@ jobs:
         tag_name: ${{ env.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+
 
     - name: 删除工作流程运行
       uses: Mattraks/delete-workflow-runs@main
