@@ -113,27 +113,13 @@ jobs:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
 
-     - name: 整理文件
+    - name: 整理文件
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 生成并推送标签
-      id: create_tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        tag_name=$(date +"%Y.%m.%d-%H%M")
-        echo "release_tag=$tag_name" >> $GITHUB_ENV
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git tag $tag_name
-        git push origin $tag_name
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 生成发布说明文件
@@ -149,14 +135,13 @@ jobs:
 
     - name: 上传固件到发布页
       uses: softprops/action-gh-release@v1
-      if: steps.create_tag.outputs.status == 'success' && !cancelled()
+      if: steps.organize.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.release_tag }}
+        tag_name: ${{ steps.compile.outputs.FILE_DATE }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
-
 
     - name: 删除工作流程运行
       uses: Mattraks/delete-workflow-runs@main
@@ -165,10 +150,4 @@ jobs:
         keep_minimum_runs: 2
 
     - name: 删除旧版本
-      uses: dev-drprasad/delete-older-releases@master
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        keep_latest: 3
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: dev-drprasad
