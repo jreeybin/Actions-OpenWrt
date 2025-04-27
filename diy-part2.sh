@@ -19,9 +19,9 @@ sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 # Add luci-app-amlogic
-rm -rf package/luci-app-passwall
-git clone https://github.com/xiaorouji/openwrt-passwall package/luci-app-passwall
-git clone https://github.com/linkease/istore package/luci-app-store
-git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
+# rm -rf package/luci-app-passwall
+# git clone https://github.com/xiaorouji/openwrt-passwall package/luci-app-passwall
+# git clone https://github.com/linkease/istore package/luci-app-store
+# git clone https://github.com/nikkinikki-org/OpenWrt-nikki package/luci-app-nikki
 # git clone https://github.com/kenzok8/openwrt-packages package/luci-app-quickstart
 # git clone https://github.com/kenzok8/openwrt-packages package/luci-app-adguardhome
